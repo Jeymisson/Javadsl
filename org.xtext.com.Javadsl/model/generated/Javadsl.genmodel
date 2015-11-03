@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<genmodel:GenModel xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore"
+    xmlns:genmodel="http://www.eclipse.org/emf/2002/GenModel" modelDirectory="/org.xtext.com.Javadsl/src-gen" editDirectory="/org.xtext.com.Javadsl.edit/src"
+    editorDirectory="/org.xtext.com.Javadsl.editor/src" modelPluginID="org.xtext.com.Javadsl"
+    forceOverwrite="true" modelName="Javadsl" updateClasspath="false" rootExtendsClass="org.eclipse.emf.ecore.impl.MinimalEObjectImpl$Container"
+    complianceLevel="6.0" copyrightFields="false" editPluginID="org.xtext.com.Javadsl.edit"
+    editorPluginID="org.xtext.com.Javadsl.editor" runtimeVersion="2.11">
+  <genPackages prefix="Javadsl" basePackage="org.xtext.com" disposableProviderFactory="true"
+      fileExtensions="javadsl" ecorePackage="Javadsl.ecore#/">
+    <genClasses ecoreClass="Javadsl.ecore#//Head">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//Head/java"/>
+    </genClasses>
+    <genClasses ecoreClass="Javadsl.ecore#//CompilationUnit">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute Javadsl.ecore#//CompilationUnit/package"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute Javadsl.ecore#//CompilationUnit/imports"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//CompilationUnit/type_declarations"/>
+    </genClasses>
+    <genClasses ecoreClass="Javadsl.ecore#//TypeDeclaration">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//TypeDeclaration/class_declaration"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//TypeDeclaration/interface_declaration"/>
+    </genClasses>
+    <genClasses ecoreClass="Javadsl.ecore#//ClassDeclaration">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute Javadsl.ecore#//ClassDeclaration/modifiers"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//ClassDeclaration/field_declarations"/>
+    </genClasses>
+    <genClasses ecoreClass="Javadsl.ecore#//InterfaceDeclaration">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//InterfaceDeclaration/field_declarations"/>
+    </genClasses>
+    <genClasses ecoreClass="Javadsl.ecore#//FieldDeclaration">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//FieldDeclaration/declaration"/>
+    </genClasses>
+    <genClasses ecoreClass="Javadsl.ecore#//StaticInitializer"/>
+    <genClasses ecoreClass="Javadsl.ecore#//MethodDeclaration"/>
+    <genClasses ecoreClass="Javadsl.ecore#//ConstructorDeclaration">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//ConstructorDeclaration/statement_block"/>
+    </genClasses>
+    <genClasses ecoreClass="Javadsl.ecore#//ParameterList"/>
+    <genClasses ecoreClass="Javadsl.ecore#//Parameter">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//Parameter/parameters"/>
+    </genClasses>
+    <genClasses ecoreClass="Javadsl.ecore#//StatementBlock">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//StatementBlock/statements"/>
+    </genClasses>
+    <genClasses ecoreClass="Javadsl.ecore#//VariableDeclaration">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//VariableDeclaration/type"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//VariableDeclaration/variable_declarator"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//VariableDeclaration/variable_declarators"/>
+    </genClasses>
+    <genClasses ecoreClass="Javadsl.ecore#//VariableDeclarator">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//VariableDeclarator/variable_initializer"/>
+    </genClasses>
+    <genClasses ecoreClass="Javadsl.ecore#//VariableInitializer">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//VariableInitializer/expr"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//VariableInitializer/variable_initializer"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//VariableInitializer/variable_initializers"/>
+    </genClasses>
+    <genClasses ecoreClass="Javadsl.ecore#//Type">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//Type/specifier"/>
+    </genClasses>
+    <genClasses ecoreClass="Javadsl.ecore#//Expression"/>
+    <genClasses ecoreClass="Javadsl.ecore#//NumericExpression">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//NumericExpression/right"/>
+    </genClasses>
+    <genClasses ecoreClass="Javadsl.ecore#//BitExpression"/>
+    <genClasses ecoreClass="Javadsl.ecore#//TestingExpression"/>
+    <genClasses ecoreClass="Javadsl.ecore#//LogicalExpression"/>
+    <genClasses ecoreClass="Javadsl.ecore#//ArgsExpression">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//ArgsExpression/arg_list"/>
+    </genClasses>
+    <genClasses ecoreClass="Javadsl.ecore#//Arglist">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//Arglist/arg"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//Arglist/args"/>
+    </genClasses>
+    <genClasses ecoreClass="Javadsl.ecore#//CastingExpression"/>
+    <genClasses ecoreClass="Javadsl.ecore#//CreatingExpression"/>
+    <genClasses ecoreClass="Javadsl.ecore#//ParenthesisExpression">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//ParenthesisExpression/type_specifiers"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//ParenthesisExpression/parenthesis"/>
+    </genClasses>
+    <genClasses ecoreClass="Javadsl.ecore#//PrimaryExpression">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//PrimaryExpression/value"/>
+    </genClasses>
+    <genClasses ecoreClass="Javadsl.ecore#//LiteralExpression">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute Javadsl.ecore#//LiteralExpression/literal_value"/>
+    </genClasses>
+    <genClasses ecoreClass="Javadsl.ecore#//TypeSpecifier">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute Javadsl.ecore#//TypeSpecifier/name"/>
+    </genClasses>
+    <genClasses ecoreClass="Javadsl.ecore#//DoStatement">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//DoStatement/statement"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//DoStatement/expression"/>
+    </genClasses>
+    <genClasses ecoreClass="Javadsl.ecore#//ForStatement">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//ForStatement/variable_declaration"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//ForStatement/for_expression1"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//ForStatement/for_expression2"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//ForStatement/for_expression3"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//ForStatement/statement"/>
+    </genClasses>
+    <genClasses ecoreClass="Javadsl.ecore#//IfStatement">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//IfStatement/expression"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//IfStatement/if_statement"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//IfStatement/else_statement"/>
+    </genClasses>
+    <genClasses ecoreClass="Javadsl.ecore#//Statement">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//Statement/variable_declaration"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//Statement/statement_expression"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//Statement/statement_block"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//Statement/if_statement"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//Statement/do_statement"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//Statement/while_statement"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//Statement/for_statement"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//Statement/try_statement"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//Statement/swith_statement"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//Statement/sync_expression"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//Statement/sync_statement"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//Statement/return_expression"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//Statement/throw_expression"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//Statement/named_statement"/>
+    </genClasses>
+    <genClasses ecoreClass="Javadsl.ecore#//SwitchStatement">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//SwitchStatement/switch_expression"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//SwitchStatement/case_expressions"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//SwitchStatement/statements"/>
+    </genClasses>
+    <genClasses ecoreClass="Javadsl.ecore#//TryStatement">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//TryStatement/try_statement"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//TryStatement/paramenters"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//TryStatement/catch_statements"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//TryStatement/finally_statement"/>
+    </genClasses>
+    <genClasses ecoreClass="Javadsl.ecore#//while_statement">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//while_statement/expression"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//while_statement/statement"/>
+    </genClasses>
+    <genClasses ecoreClass="Javadsl.ecore#//Numeric">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//Numeric/left"/>
+    </genClasses>
+    <genClasses ecoreClass="Javadsl.ecore#//Bit">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//Bit/left"/>
+    </genClasses>
+    <genClasses ecoreClass="Javadsl.ecore#//Testing">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//Testing/left"/>
+    </genClasses>
+    <genClasses ecoreClass="Javadsl.ecore#//Logical">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//Logical/left"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//Logical/ternary"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//Logical/ternary_end"/>
+    </genClasses>
+    <genClasses ecoreClass="Javadsl.ecore#//Args">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//Args/left"/>
+    </genClasses>
+    <genClasses ecoreClass="Javadsl.ecore#//Casting">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//Casting/left"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Javadsl.ecore#//Casting/types"/>
+    </genClasses>
+  </genPackages>
+</genmodel:GenModel>
