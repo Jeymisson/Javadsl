@@ -4,11 +4,10 @@
 package org.xtext.com.validation
 
 import org.eclipse.xtext.validation.Check
-import org.xtext.com.javadsl.IfStatement
 import org.xtext.com.javadsl.JavadslPackage
-import org.xtext.com.javadsl.LogicalExpression
-import org.xtext.com.javadsl.TestingExpression
+import org.xtext.com.javadsl.MethodDeclaration
 import org.xtext.com.javadsl.VariableDeclaration
+import org.xtext.com.javadsl.Type
 
 //import org.eclipse.xtext.validation.Check
 
@@ -30,12 +29,27 @@ class JavadslValidator extends AbstractJavadslValidator {
 		}
 	}
 	
+//	@Check
+//	def checkType(IfStatement statement){
+//		if(!(statement.expression instanceof TestingExpression) && !(statement.expression instanceof LogicalExpression)){
+//			error("It's not boolean", JavadslPackage.Literals.IF_STATEMENT__EXPRESSION)
+//			return
+//		}
+//	}
+	
 	@Check
-	def checkType(IfStatement statement){
-		if(!(statement.expression instanceof TestingExpression) && !(statement.expression instanceof LogicalExpression)){
-			error("It's not boolean", JavadslPackage.Literals.IF_STATEMENT__EXPRESSION)
-			return
+	def checkMethod(MethodDeclaration m){
+		val type = m.getType() as Type;
+		for(statement: m.body.statements){
+			if(!type.specifier.type.equals("void") && statement.return_expression == null){
+				error("Method should return "+ type.specifier.type, JavadslPackage.Literals.METHOD_DECLARATION__TYPE)
+			}
+			else if(!type.specifier.type.equals("void") &&
+				!statement.return_expression.literal.equals(type.specifier.type)){
+				error("Method should return "+ type.specifier.type, JavadslPackage.Literals.METHOD_DECLARATION__TYPE)
+			}
 		}
+		return
 	}
 
 //	

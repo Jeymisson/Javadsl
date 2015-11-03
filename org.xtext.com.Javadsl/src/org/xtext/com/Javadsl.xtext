@@ -52,9 +52,9 @@ StaticInitializer:
       "static" StatementBlock ;
 
 MethodDeclaration: 
-      (Modifier)* Type ID 
+      modifiers+=(Modifier)* type=Type ID 
       '(' (ParameterList)? ')' ('[' ']')* 
-      (statement_block=StatementBlock | ';') ;
+      (body=StatementBlock | ';') ;
 
 ConstructorDeclaration: 
       (Modifier)* ID '(' (ParameterList)? ')' 
@@ -69,7 +69,7 @@ Parameter:
 StatementBlock: '{' {StatementBlock} (statements+=Statement)* '}' ;
       
 VariableDeclaration: 
-      (Modifier)* type=Type? variable_declarator=VariableDeclarator 
+      modifiers+=(Modifier)* type=Type variable_declarator=VariableDeclarator 
       (',' variable_declarators+=VariableDeclarator)* ';' ;
 
 VariableDeclarator: 
@@ -84,62 +84,58 @@ Type:
 	specifier=TypeSpecifier ('[' ']')*
 ;
 
-Expression: 
+Expression returns Expression: 
 	NumericExpression 
 ; 
 
-NumericExpression: 
+NumericExpression returns Expression: 
 	('-' | '++' | '--') BitExpression
       
 	| BitExpression (('++' | '--') | ({Numeric.left=current}('+' | '+=' | '-' | '-=' | '*' | '*=' | '/' | '/=' | '%' | '%=') right=BitExpression)*)
 ;
 
-BitExpression:
+BitExpression returns Expression:
 	'~' LogicalExpression
     | LogicalExpression ({Bit.left=current}('>>=' | '<<' | '>>' | '>>>') right=LogicalExpression)* 
 ;
 
-TestingExpression returns TestingExpression: 
+TestingExpression returns Expression: 
       ArgsExpression
       ( {Testing.left=current}('>' | '<' | '>=' | '<=' | '==' | '!=') right=ArgsExpression )*
 ;
 
-LogicalExpression returns LogicalExpression: 
+LogicalExpression returns Expression: 
     '!' right=TestingExpression
       | TestingExpression ({Logical.left=current}("&" | "&=" | '|' | '|=' | '^' | '^=' | "&&" | '||=' | '||') right=TestingExpression | {Logical.left=current}'?' right=TestingExpression {Logical.ternary=current}':' ternary_end=TestingExpression)* 
       | {LogicalExpression} "true" 
       | {LogicalExpression} "false"
 ;
 
-ArgsExpression:
+ArgsExpression returns Expression:
 	CastingExpression ('(' arg_list+=Arglist? ')'| {Args.left=current}'.' right=CastingExpression | {Args.left=current}'[' right=CastingExpression ']' | {Args.left=current}',' right=CastingExpression | {Args.left=current}'instanceof' ObjectName )*
 ;
 
 Arglist: arg=CastingExpression (',' args+=CastingExpression)* ;
       
-CastingExpression: 
+CastingExpression returns Expression: 
       CreatingExpression ({Casting.left=current}'(' types+=Type ')' right=CreatingExpression)*;
       
-CreatingExpression: 
+CreatingExpression returns Expression: 
 	ParenthesisExpression
       ("new" (
       	(ObjectName '(' (arg_list+=Arglist)? ')') | (type_specifiers+=TypeSpecifier ('[' parenthesis+=ParenthesisExpression ']')? ('[' ']')*)
       ))* ;
 
-ParenthesisExpression:
+ParenthesisExpression returns Expression:
 	PrimaryExpression ('(' parenthesis+=PrimaryExpression ')')*
 ;
 
-PrimaryExpression: 
-	{PrimaryExpression} (value=LiteralExpression| "null" |  "super" |  "this" |  ID)
-;
-
-LiteralExpression: 
-     literal_value=(IntegerLiteral | FloatLiteral | STRING | Character)      
+PrimaryExpression returns Expression: 
+	(literal=(IntegerLiteral | FloatLiteral | STRING | Character)| "null" |  "super" |  "this" |  ID)
 ;
 
 TypeSpecifier: 
-	name=("boolean"
+	{TypeSpecifier} type=("boolean"
 	| "byte" 
 	| "char" 
 	| "short" 
@@ -147,7 +143,8 @@ TypeSpecifier:
 	| "float" 
 	| "long" 
 	| "double" 
-	| ObjectName)
+	| "void"
+	| ID)
 ;
 
 Modifier:
@@ -220,7 +217,8 @@ Statement:
 	| (while_statement=while_statement) 
 	| (for_statement=ForStatement) 
 	| (try_statement=TryStatement) 
-	| (swith_statement=SwitchStatement) 
+	| (swith_statement=SwitchStatement)
+	| {Statement} ID '=' assignment_statement=VariableInitializer ';'
 	| {Statement} ("synchronized" '(' sync_expression=Expression ')' sync_statement=Statement) 
 	| {Statement} ("return" (return_expression=Expression)? ';') 
 	| {Statement} ("throw" throw_expression=Expression ';') 
