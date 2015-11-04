@@ -91,34 +91,38 @@ Expression returns Expression:
 NumericExpression returns Expression: 
 	('-' | '++' | '--') BitExpression
       
-	| BitExpression (('++' | '--') | ({Numeric.left=current}('+' | '+=' | '-' | '-=' | '*' | '*=' | '/' | '/=' | '%' | '%=') right=BitExpression)*)
+	| BitExpression (('++' | '--') | ({NumericExpression.left=current} tokens=('+' | '+=' | '-' | '-=' | '*' | '*=' | '/' | '/=' | '%' | '%=') right=BitExpression)*)
 ;
 
 BitExpression returns Expression:
 	'~' LogicalExpression
-    | LogicalExpression ({Bit.left=current}('>>=' | '<<' | '>>' | '>>>') right=LogicalExpression)* 
+    | LogicalExpression ({BitExpression.left=current} tokens=('>>=' | '<<' | '>>' | '>>>') right=LogicalExpression)* 
 ;
 
 TestingExpression returns Expression: 
       ArgsExpression
-      ( {Testing.left=current}('>' | '<' | '>=' | '<=' | '==' | '!=') right=ArgsExpression )*
+      ({TestingExpression.left=current} tokens=('>' | '<' | '>=' | '<=' | '==' | '!=') right=ArgsExpression )*
 ;
 
 LogicalExpression returns Expression: 
     '!' right=TestingExpression
-      | TestingExpression ({Logical.left=current}("&" | "&=" | '|' | '|=' | '^' | '^=' | "&&" | '||=' | '||') right=TestingExpression | {Logical.left=current}'?' right=TestingExpression {Logical.ternary=current}':' ternary_end=TestingExpression)* 
+      | TestingExpression ({LogicalExpression.left=current} tokens=(LOGIC_TOKENS) right=TestingExpression | {LogicalExpression.left=current}'?' right=TestingExpression {LogicalExpression.ternary=current}':' ternary_end=TestingExpression)* 
       | {LogicalExpression} "true" 
       | {LogicalExpression} "false"
 ;
 
+terminal LOGIC_TOKENS:
+	("&" | "&=" | '|' | '|=' | '^' | '^=' | "&&" | '||=' | '||')
+;
+
 ArgsExpression returns Expression:
-	CastingExpression ('(' arg_list+=Arglist? ')'| {Args.left=current}'.' right=CastingExpression | {Args.left=current}'[' right=CastingExpression ']' | {Args.left=current}',' right=CastingExpression | {Args.left=current}'instanceof' ObjectName )*
+	CastingExpression ('(' arg_list+=Arglist? ')'| {ArgsExpression.left=current}'.' right=CastingExpression | {ArgsExpression.left=current}'[' right=CastingExpression ']' | {ArgsExpression.left=current}',' right=CastingExpression | {Args.left=current}'instanceof' ObjectName )*
 ;
 
 Arglist: arg=CastingExpression (',' args+=CastingExpression)* ;
       
 CastingExpression returns Expression: 
-      CreatingExpression ({Casting.left=current}'(' types+=Type ')' right=CreatingExpression)*;
+      CreatingExpression ({CastingExpression.left=current}'(' types+=Type ')' right=CreatingExpression)*;
       
 CreatingExpression returns Expression: 
 	ParenthesisExpression
@@ -131,21 +135,84 @@ ParenthesisExpression returns Expression:
 ;
 
 PrimaryExpression returns Expression: 
-	(literal=(IntegerLiteral | FloatLiteral | STRING | Character)| "null" |  "super" |  "this" |  ID)
+	literal=(IntegerLiteral | FloatLiteral| StringLiteral| CharacterLiteral|
+		NullLiteral| SuperLiteral| ThisLiteral | ObjectLiteral
+	)
+;
+
+ObjectLiteral:
+	{ObjectType} ID
+;
+
+ThisLiteral:
+	{ThisType} "this"
+;
+
+SuperLiteral:
+	{SuperType} "super"
+;
+
+NullLiteral:
+	{NullType} "null"
+;
+
+StringLiteral:
+	{ObjectType} STRING
 ;
 
 TypeSpecifier: 
-	{TypeSpecifier} type=("boolean"
-	| "byte" 
-	| "char" 
-	| "short" 
-	| "int" 
-	| "float" 
-	| "long" 
-	| "double" 
-	| "void"
-	| ID)
+	BooleanType
+	| ByteType 
+	| CharType
+	| ShortType 
+	| IntType 
+	| FloatType 
+	| LongType 
+	| DoubleType
+	| VoidType
+	| ObjectType
 ;
+
+CharType:
+	{CharType} name="char"
+;
+
+BooleanType:
+	{BooleanType} name="boolean"
+;
+
+ObjectType:
+	{ObjectType} name=ID
+;
+
+VoidType:
+	{VoidType} name="void"
+;
+
+DoubleType:
+	{DoubleType} name="double"
+;
+
+LongType:
+	{LongType} name="long"
+;
+
+ByteType:
+	{ByteType} name="byte"
+;
+
+ShortType:
+	{ShortType} name="short"
+;
+
+FloatType:
+	{FloatType} name="float"
+;
+
+IntType:
+	{IntType} name="int"
+;
+
 
 Modifier:
 	"public" 
@@ -160,8 +227,8 @@ Modifier:
 	| "transient" 
 ;
 
-Character: 
-	STRING ;
+CharacterLiteral: 
+	{CharType} STRING ;
 
 decimal_digits: 
 	INT INT*
@@ -174,9 +241,9 @@ exponent_part:
 	('0..9e');
 
 IntegerLiteral:
-	decimal_integer_literal |
+	{IntType} (decimal_integer_literal |
 	hex_integer_literal |
-	octal_integer_literal
+	octal_integer_literal)
 ;
 
 decimal_integer_literal: decimal_digits NUMBER_SUFFIX?;
@@ -194,8 +261,8 @@ octal_numeral:
 ;
 
 FloatLiteral: 
-	decimal_digits '.'? decimal_digits? (exponent_part)? FLOAT_SUFFIX?
-	| '.' decimal_digits (exponent_part)? FLOAT_SUFFIX? 	
+	{FloatType} (decimal_digits '.'? decimal_digits? (exponent_part)? FLOAT_SUFFIX?
+	| '.' decimal_digits (exponent_part)? FLOAT_SUFFIX?) 	
 ;
 
 ForStatement: 
@@ -205,7 +272,7 @@ ForStatement:
 	')' statement=Statement ;
 
 IfStatement: 
-      "if" '(' expression=Expression ')' if_statement=Statement 
+      "if" '(' expression=Expression')' if_statement=Statement 
       ("else" else_statement=Statement)? ;	   
 
 Statement: 
@@ -220,7 +287,7 @@ Statement:
 	| (swith_statement=SwitchStatement)
 	| {Statement} ID '=' assignment_statement=VariableInitializer ';'
 	| {Statement} ("synchronized" '(' sync_expression=Expression ')' sync_statement=Statement) 
-	| {Statement} ("return" (return_expression=Expression)? ';') 
+	| {ReturnStatement} ("return" return_expression=Expression? ';') 
 	| {Statement} ("throw" throw_expression=Expression ';') 
 	| {Statement} (ID ':' named_statement=Statement) 
 	| {Statement} ("break" (ID)? ';') 

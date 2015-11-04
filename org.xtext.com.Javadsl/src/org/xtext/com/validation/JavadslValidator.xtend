@@ -4,10 +4,15 @@
 package org.xtext.com.validation
 
 import org.eclipse.xtext.validation.Check
+import org.xtext.com.javadsl.IfStatement
 import org.xtext.com.javadsl.JavadslPackage
+import org.xtext.com.javadsl.LogicalExpression
 import org.xtext.com.javadsl.MethodDeclaration
+import org.xtext.com.javadsl.ObjectType
+import org.xtext.com.javadsl.ReturnStatement
+import org.xtext.com.javadsl.TestingExpression
 import org.xtext.com.javadsl.VariableDeclaration
-import org.xtext.com.javadsl.Type
+import org.xtext.com.javadsl.VoidType
 
 //import org.eclipse.xtext.validation.Check
 
@@ -18,105 +23,42 @@ import org.xtext.com.javadsl.Type
  */
 class JavadslValidator extends AbstractJavadslValidator {
 	
-	public static val INVALID_TYPE = 'invalidType'
-	
 	@Check
 	def checkType(VariableDeclaration v){
-		if(v.type.specifier.equals("int") //&& (TODO:) check return
-		){
-			error("Invalid type, int required", JavadslPackage.Literals.TYPE__SPECIFIER)
+		if(!v.type.specifier.class.equals(
+			v.variable_declarator.variable_initializer.expr.literal.class
+		)){
+			error("Invalid type " + v.type.specifier.name + " required", JavadslPackage.Literals.VARIABLE_DECLARATION__TYPE)
 			return
 		}
 	}
 	
-//	@Check
-//	def checkType(IfStatement statement){
-//		if(!(statement.expression instanceof TestingExpression) && !(statement.expression instanceof LogicalExpression)){
-//			error("It's not boolean", JavadslPackage.Literals.IF_STATEMENT__EXPRESSION)
-//			return
-//		}
-//	}
+	@Check
+	def checkType(IfStatement statement){
+		if(!(statement.expression instanceof LogicalExpression) && !(statement.expression instanceof TestingExpression)){
+			error("It's not boolean", JavadslPackage.Literals.IF_STATEMENT__EXPRESSION)
+			return
+		}
+	}
 	
 	@Check
 	def checkMethod(MethodDeclaration m){
-		val type = m.getType() as Type;
-		for(statement: m.body.statements){
-			if(!type.specifier.type.equals("void") && statement.return_expression == null){
-				error("Method should return "+ type.specifier.type, JavadslPackage.Literals.METHOD_DECLARATION__TYPE)
-			}
-			else if(!type.specifier.type.equals("void") &&
-				!statement.return_expression.literal.equals(type.specifier.type)){
-				error("Method should return "+ type.specifier.type, JavadslPackage.Literals.METHOD_DECLARATION__TYPE)
+		val return_statements = m.body.statements.filter(typeof(ReturnStatement))
+		if(!(m.type.specifier instanceof VoidType) && return_statements.isEmpty){
+			error("Method should return "+ m.type.specifier.name, JavadslPackage.Literals.METHOD_DECLARATION__TYPE)
+			return
+		}
+		for(st: return_statements){
+			if((m.type.specifier instanceof ObjectType) && !st.return_expression.literal.equals(m.type.specifier)){
+				error("Method should return "+ m.type.specifier.name + " type", JavadslPackage.Literals.METHOD_DECLARATION__TYPE)
+				return
+			}else if(m.type.specifier instanceof VoidType){
+				error("Void methods can't return a value", JavadslPackage.Literals.METHOD_DECLARATION__TYPE)
+				return
+			}else if(!m.type.specifier.class.equals(st.return_expression.literal.class)){
+				error("Method should return " + m.type.specifier.name, JavadslPackage.Literals.METHOD_DECLARATION__TYPE)
+				return
 			}
 		}
-		return
 	}
-
-//	
-//	@Check
-//	def checkTypes(ClassDeclaration c) {
-//		val fields = c.getField_declarations();
-//		
-//		val List<MethodDeclaration> methods = new LinkedList<MethodDeclaration>();
-//		val List<ConstructorDeclaration> constructors = new LinkedList<ConstructorDeclaration>();
-//		val List<VariableDeclaration> variables = new LinkedList<VariableDeclaration>();
-//		
-//		for(field: fields){
-//			val declaration = field.declaration;
-//			if(declaration instanceof MethodDeclaration){
-//				methods.add(declaration);
-//				error("Test validator", declaration, JavadslPackage.Literals.FIELD_DECLARATION__DECLARATION);
-//			}else if(declaration instanceof ConstructorDeclaration){
-//				constructors.add(declaration);
-//			}else if(declaration instanceof VariableDeclaration){
-//				variables.add(declaration);
-//			}
-//		}
-//		
-//		checkMethodsTypes(methods);
-//		checkVariablesTypes(variables);
-//		checkConstructorsTypes(constructors);
-//	}
-//	
-//	def checkConstructorsTypes(List<ConstructorDeclaration> declarations) {
-//		throw new UnsupportedOperationException("TODO: auto-generated method stub")
-//	}
-//	
-//	def checkVariablesTypes(List<VariableDeclaration> declarations) {
-//		val variablesMap = new HashMap<String, List<VariableDeclarator>>();
-//		for(declaration: declarations){
-//			if(declaration.type != null){
-//				val variables = new LinkedList<VariableDeclarator>();
-//				variables.addAll(declaration.variable_declarators);
-//				variables.add(declaration.variable_declarator);
-//				variablesMap.put(declaration.type.specifier.name, variables);
-//				
-//			}
-//		}
-//		
-//		for(String type: variablesMap.keySet()){
-//			val variables = variablesMap.get(type);
-//			for(variable: variables){
-//				checkVariableExpressionType(variable.variable_initializer.expr, type);
-//				checkVariableExpressionType(variable.variable_initializer.variable_initializer.expr, type)
-//				for(initalizers:variable.variable_initializer.variable_initializers){
-//					checkVariableExpressionType(variable.variable_initializer.expr, type)
-//				}
-//			}
-//		}
-//	}
-//	
-//	def checkVariableExpressionType(Expression expr, String type) {
-//		if(expr!=null){
-//			if(expr instanceof LiteralExpressionElements){
-//				if(type.equals("String")){
-//					error("Type error variable should be a string type", expr, JavadslPackage.Literals.EXPRESSION__LITERAL_VALUE)
-//				}
-//			}		
-//		}
-//	}
-//	
-//	def checkMethodsTypes(List<MethodDeclaration> declarations) {
-//		throw new UnsupportedOperationException("TODO: auto-generated method stub")
-//	}
 }
