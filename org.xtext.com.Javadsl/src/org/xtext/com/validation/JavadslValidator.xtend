@@ -13,6 +13,7 @@ import org.xtext.com.javadsl.ReturnStatement
 import org.xtext.com.javadsl.TestingExpression
 import org.xtext.com.javadsl.VariableDeclaration
 import org.xtext.com.javadsl.VoidType
+import org.xtext.com.javadsl.BooleanType
 
 //import org.eclipse.xtext.validation.Check
 
@@ -35,7 +36,10 @@ class JavadslValidator extends AbstractJavadslValidator {
 	
 	@Check
 	def checkType(IfStatement statement){
-		if(!(statement.expression instanceof LogicalExpression) && !(statement.expression instanceof TestingExpression)){
+		if(!(statement.expression instanceof LogicalExpression) &&
+			!(statement.expression instanceof TestingExpression) &&
+			!(statement.expression.literal instanceof BooleanType)
+		){
 			error("It's not boolean", JavadslPackage.Literals.IF_STATEMENT__EXPRESSION)
 			return
 		}

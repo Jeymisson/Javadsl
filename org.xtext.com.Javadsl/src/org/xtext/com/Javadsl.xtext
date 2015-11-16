@@ -102,13 +102,16 @@ BitExpression returns Expression:
 TestingExpression returns Expression: 
       ArgsExpression
       ({TestingExpression.left=current} tokens=('>' | '<' | '>=' | '<=' | '==' | '!=') right=ArgsExpression )*
+      | {TestingExpression} "true"
+      | {TestingExpression} "false"
 ;
 
 LogicalExpression returns Expression: 
     '!' right=TestingExpression
-      | TestingExpression ({LogicalExpression.left=current} tokens=(LOGIC_TOKENS) right=TestingExpression | {LogicalExpression.left=current}'?' right=TestingExpression {LogicalExpression.ternary=current}':' ternary_end=TestingExpression)* 
-      | {LogicalExpression} "true" 
-      | {LogicalExpression} "false"
+      | TestingExpression ({LogicalExpression.left=current} tokens=(LOGIC_TOKENS) right=TestingExpression |
+      	{LogicalExpression.left=current}'?' right=TestingExpression {LogicalExpression.ternary=current}':' ternary_end=TestingExpression
+      | {LogicalExpression.left=current}'instanceof' ObjectName
+      )*
 ;
 
 terminal LOGIC_TOKENS:
@@ -116,7 +119,7 @@ terminal LOGIC_TOKENS:
 ;
 
 ArgsExpression returns Expression:
-	CastingExpression ('(' arg_list+=Arglist? ')'| {ArgsExpression.left=current}'.' right=CastingExpression | {ArgsExpression.left=current}'[' right=CastingExpression ']' | {ArgsExpression.left=current}',' right=CastingExpression | {Args.left=current}'instanceof' ObjectName )*
+	CastingExpression ('(' arg_list+=Arglist? ')'| {ArgsExpression.left=current}'.' right=CastingExpression | {ArgsExpression.left=current}'[' right=CastingExpression ']' | {ArgsExpression.left=current}',' right=CastingExpression)*
 ;
 
 Arglist: arg=CastingExpression (',' args+=CastingExpression)* ;
@@ -136,8 +139,13 @@ ParenthesisExpression returns Expression:
 
 PrimaryExpression returns Expression: 
 	literal=(IntegerLiteral | FloatLiteral| StringLiteral| CharacterLiteral|
-		NullLiteral| SuperLiteral| ThisLiteral | ObjectLiteral
+		NullLiteral| SuperLiteral| ThisLiteral | ObjectLiteral| BooleanLiteral
 	)
+;
+
+BooleanLiteral:
+	{BooleanType} ("true"
+	|"false")
 ;
 
 ObjectLiteral:
@@ -238,7 +246,8 @@ DoStatement:
       "do" statement=Statement "while" '(' expression=Expression ')' ';' ;
 
 exponent_part: 
-	('0..9e');
+	('0..9e'|'0..9E')
+;
 
 IntegerLiteral:
 	{IntType} (decimal_integer_literal |
