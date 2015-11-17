@@ -4,6 +4,8 @@
 package org.xtext.com.validation
 
 import org.eclipse.xtext.validation.Check
+import org.xtext.com.javadsl.BooleanType
+import org.xtext.com.javadsl.ClassDeclaration
 import org.xtext.com.javadsl.IfStatement
 import org.xtext.com.javadsl.JavadslPackage
 import org.xtext.com.javadsl.LogicalExpression
@@ -13,7 +15,10 @@ import org.xtext.com.javadsl.ReturnStatement
 import org.xtext.com.javadsl.TestingExpression
 import org.xtext.com.javadsl.VariableDeclaration
 import org.xtext.com.javadsl.VoidType
-import org.xtext.com.javadsl.BooleanType
+import java.util.Set
+import java.util.HashSet
+import java.util.LinkedList
+import org.xtext.com.javadsl.Parameter
 
 //import org.eclipse.xtext.validation.Check
 
@@ -23,6 +28,8 @@ import org.xtext.com.javadsl.BooleanType
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#validation
  */
 class JavadslValidator extends AbstractJavadslValidator {
+	
+	var Iterable<MethodDeclaration> methods;
 	
 	@Check
 	def checkType(VariableDeclaration v){
@@ -46,8 +53,22 @@ class JavadslValidator extends AbstractJavadslValidator {
 	}
 	
 	@Check
+	def mapClasses(ClassDeclaration c){
+		val fields = c.field_declarations.filter[it.declaration instanceof MethodDeclaration]
+		methods = fields.map[it.declaration as MethodDeclaration]
+		println("methods: " + methods + " length: " + methods.length)
+	}
+	
+	@Check
 	def checkMethod(MethodDeclaration m){
 		val return_statements = m.body.statements.filter(typeof(ReturnStatement))
+		val same_name = methods.filter[it.method_id.equals(m.method_id) && !it.identityEquals(m) && it.list.parameters.length == m.list.parameters.length];
+		
+		println("m: " + m + " m.list: " + m.list + " m.list.parameters: " + m.list.parameters)
+		println("same-name: " + same_name + " length: " + same_name.length)
+		
+		checkParameters(same_name, m);
+		
 		if(!(m.type.specifier instanceof VoidType) && return_statements.isEmpty){
 			error("Method should return "+ m.type.specifier.name, JavadslPackage.Literals.METHOD_DECLARATION__TYPE)
 			return
@@ -62,6 +83,25 @@ class JavadslValidator extends AbstractJavadslValidator {
 			}else if(!m.type.specifier.class.equals(st.return_expression.literal.class)){
 				error("Method should return " + m.type.specifier.name, JavadslPackage.Literals.METHOD_DECLARATION__TYPE)
 				return
+			}
+		}
+	}
+	
+	def checkParameters(Iterable<MethodDeclaration> methods, MethodDeclaration m) {
+		var pm = new LinkedList<Parameter>(m.list.parameters)
+		pm.add(m.list.parameter)
+		for(mi:methods){
+			var pn = new LinkedList<Parameter>(mi.list.parameters)
+			pn.add(mi.list.parameter)
+			var equal = true
+			for(var i=0; i<pm.length; i++){
+				if(!pm.get(i).type.class.equals(pn.get(i).type.class)){
+					equal = false;
+				}
+			}
+			println("pn: " + pn + " pm: " +  pm + " equal: " + equal)
+			if(equal){
+				error("Duplicate method " + m.method_id, JavadslPackage.Literals.METHOD_DECLARATION__METHOD_ID)
 			}
 		}
 	}

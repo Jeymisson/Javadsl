@@ -61,10 +61,10 @@ ConstructorDeclaration:
       statement_block=StatementBlock ;
       
 ParameterList: 
-      Parameter (',' parameters+=Parameter)* ;
+      parameter=Parameter (',' parameters+=Parameter)* ;
       
 Parameter: 
-      Type ID ('[' ']')* ;
+      type=Type ID ('[' ']')* ;
       
 StatementBlock: '{' {StatementBlock} (statements+=Statement)* '}' ;
       
