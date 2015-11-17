@@ -4,8 +4,15 @@
 package org.xtext.com.generator
 
 import org.eclipse.emf.ecore.resource.Resource
-import org.eclipse.xtext.generator.IGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess
+import org.eclipse.xtext.generator.IGenerator
+import org.xtext.com.javadsl.ClassDeclaration
+import org.xtext.com.javadsl.Expression
+import org.xtext.com.javadsl.FieldDeclaration
+import org.xtext.com.javadsl.VariableDeclaration
+import org.xtext.com.javadsl.VariableDeclarator
+import org.xtext.com.javadsl.VariableInitializer
+import org.xtext.com.javadsl.JavadslPackage
 
 /**
  * Generates code from your model files on save.
@@ -15,10 +22,48 @@ import org.eclipse.xtext.generator.IFileSystemAccess
 class JavadslGenerator implements IGenerator {
 	
 	override void doGenerate(Resource resource, IFileSystemAccess fsa) {
-//		fsa.generateFile('greetings.txt', 'People to greet: ' + 
-//			resource.allContents
-//				.filter(typeof(Greeting))
-//				.map[name]
-//				.join(', '))
+		for(c: resource.allContents.toIterable.filter(ClassDeclaration)){
+			fsa.generateFile(c.class_name.toString() + '.asm', c.compile)
+		}
+	}
+	
+	def compile(ClassDeclaration c) '''
+		«FOR f:c.field_declarations»
+      		«f.compile»
+    	«ENDFOR»
+	'''
+	
+	def compile(FieldDeclaration f) '''
+		«IF f.declaration instanceof VariableDeclaration»
+			«VariableDeclaration.cast(f.declaration).compile»
+		«ENDIF»
+	'''
+	
+	def compile(VariableDeclaration v) '''
+		«v.variable_declarator.compile»
+		«FOR vd: v.variable_declarators»
+			«vd.compile»
+		«ENDFOR»
+	'''
+	
+	def compile(VariableDeclarator vd) '''
+		«IF vd.variable_initializer != null»
+			«vd.variable_initializer.compile(vd.variable_name)»
+		«ENDIF»
+	'''
+	
+	def compile(VariableInitializer vi, String id) '''
+		«vi.expr.compile(id)»
+	'''
+	
+	def compile(Expression e, String id) '''		
+		LD R«i», #«e.literal.eGet(JavadslPackage.Literals.FLOAT_TYPE__VALUE)»
+		ST id, R«i»
+		«inc»
+	'''
+	
+	Integer i = 0;
+	def void inc(){
+		i++;
 	}
 }
