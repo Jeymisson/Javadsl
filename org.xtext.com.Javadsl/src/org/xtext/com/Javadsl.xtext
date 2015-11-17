@@ -31,7 +31,7 @@ TypeDeclaration:
 ;
 
 ClassDeclaration:
-	{ClassDeclaration} modifiers+=Modifier* 'class' ID ('extends' ObjectName)? ('implements' ObjectName ('.' ObjectName)*)?  
+	{ClassDeclaration} modifiers+=Modifier* 'class' class_name=ID ('extends' ObjectName)? ('implements' ObjectName ('.' ObjectName)*)?  
 	'{' (field_declarations+=FieldDeclaration)* '}'
 ;
 
@@ -73,7 +73,7 @@ VariableDeclaration:
       (',' variable_declarators+=VariableDeclarator)* ';' ;
 
 VariableDeclarator: 
-      {VariableDeclarator} ID ('[' ']')* ( '=' variable_initializer=VariableInitializer )? ;
+      {VariableDeclarator} variable_name=ID ('[' ']')* ( '=' variable_initializer=VariableInitializer )? ;
 
 VariableInitializer: 
       expr=Expression 
@@ -144,28 +144,28 @@ PrimaryExpression returns Expression:
 ;
 
 BooleanLiteral:
-	{BooleanType} ("true"
+	{BooleanType} value=("true"
 	|"false")
 ;
 
 ObjectLiteral:
-	{ObjectType} ID
+	{ObjectType} value=ID
 ;
 
 ThisLiteral:
-	{ThisType} "this"
+	{ThisType} value="this"
 ;
 
 SuperLiteral:
-	{SuperType} "super"
+	{SuperType} value="super"
 ;
 
 NullLiteral:
-	{NullType} "null"
+	{NullType} value="null"
 ;
 
 StringLiteral:
-	{ObjectType} STRING
+	{ObjectType} value=STRING
 ;
 
 TypeSpecifier: 
@@ -236,7 +236,7 @@ Modifier:
 ;
 
 CharacterLiteral: 
-	{CharType} STRING ;
+	{CharType} value=STRING ;
 
 decimal_digits: 
 	INT INT*
@@ -245,12 +245,12 @@ decimal_digits:
 DoStatement: 
       "do" statement=Statement "while" '(' expression=Expression ')' ';' ;
 
-exponent_part: 
+terminal EXPONENT_PART: 
 	('0..9e'|'0..9E')
 ;
 
 IntegerLiteral:
-	{IntType} (decimal_integer_literal |
+	{IntType} value=(decimal_integer_literal |
 	hex_integer_literal |
 	octal_integer_literal)
 ;
@@ -270,8 +270,15 @@ octal_numeral:
 ;
 
 FloatLiteral: 
-	{FloatType} (decimal_digits '.'? decimal_digits? (exponent_part)? FLOAT_SUFFIX?
-	| '.' decimal_digits (exponent_part)? FLOAT_SUFFIX?) 	
+	{FloatType} value=(float_full | float_part)
+;
+
+float_part:
+	'.' decimal_digits EXPONENT_PART? FLOAT_SUFFIX?
+;
+
+float_full:
+	decimal_digits '.'? decimal_digits? EXPONENT_PART? FLOAT_SUFFIX?
 ;
 
 ForStatement: 
