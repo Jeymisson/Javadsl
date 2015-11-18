@@ -9,10 +9,22 @@ import org.eclipse.xtext.generator.IGenerator
 import org.xtext.com.javadsl.ClassDeclaration
 import org.xtext.com.javadsl.Expression
 import org.xtext.com.javadsl.FieldDeclaration
+import org.xtext.com.javadsl.JavadslPackage
+import org.xtext.com.javadsl.NumericExpression
+import org.xtext.com.javadsl.TestingExpression
 import org.xtext.com.javadsl.VariableDeclaration
 import org.xtext.com.javadsl.VariableDeclarator
 import org.xtext.com.javadsl.VariableInitializer
-import org.xtext.com.javadsl.JavadslPackage
+import org.xtext.com.javadsl.impl.BooleanTypeImpl
+import org.xtext.com.javadsl.impl.IntTypeImpl
+import org.xtext.com.javadsl.impl.ObjectTypeImpl
+import org.xtext.com.javadsl.MethodDeclaration
+import org.xtext.com.javadsl.StaticInitializer
+import org.xtext.com.javadsl.StatementBlock
+import org.xtext.com.javadsl.Statement
+import org.xtext.com.javadsl.IfStatement
+import org.xtext.com.javadsl.ReturnStatement
+import org.eclipse.emf.ecore.EObject
 
 /**
  * Generates code from your model files on save.
@@ -28,14 +40,23 @@ class JavadslGenerator implements IGenerator {
 	}
 	
 	def compile(ClassDeclaration c) '''
+					LD SP, #stackStart
 		«FOR f:c.field_declarations»
-      		«f.compile»
-    	«ENDFOR»
+	      	«f.compile»
+	    «ENDFOR»
+	    
+					HALT
 	'''
 	
 	def compile(FieldDeclaration f) '''
 		«IF f.declaration instanceof VariableDeclaration»
 			«VariableDeclaration.cast(f.declaration).compile»
+		«ENDIF»
+		«IF f.declaration instanceof MethodDeclaration»
+			«MethodDeclaration.cast(f.declaration).compile»
+		«ENDIF»
+		«IF f.declaration instanceof StaticInitializer»
+			«StaticInitializer.cast(f.declaration).compile»
 		«ENDIF»
 	'''
 	
@@ -45,7 +66,60 @@ class JavadslGenerator implements IGenerator {
 			«vd.compile»
 		«ENDFOR»
 	'''
+
+	def compile(MethodDeclaration d) '''
+		«IF d.body != null»
+		
+		//«d.method_id»'s code
+		label«d.method_id»:
+		«d.body.compile»
+		«ENDIF»
+	'''	
 	
+	def compile(StaticInitializer initializer) '''
+		«initializer.body.compile»
+	'''	
+
+	def compile(StatementBlock block) '''
+		«FOR stmt: block.statements»
+			«stmt.compile»
+		«ENDFOR»
+	'''	
+
+	def compile(Statement stmt) '''
+					«IF stmt.variable_declaration != null»
+						«stmt.variable_declaration.compile»
+					«ELSEIF stmt.statement_block != null»
+						«stmt.statement_block.compile»
+					«ELSEIF stmt.if_statement != null»
+						«stmt.if_statement.compile»
+					«ELSEIF stmt.assignment_statement != null»
+						«stmt.assignment_statement.compile(stmt.stmt_id)»
+					«ELSEIF stmt.statement_expression != null»
+						«stmt.statement_expression.compileParentExp»
+					«ELSEIF stmt instanceof ReturnStatement»
+								BR *0(SP)
+					«indent»
+					«ENDIF»
+	'''	
+	
+	def compile(IfStatement ifstmt) '''
+		«var reg = i.intValue»
+		«ifstmt.expression.compileParentExp»
+					SUB R«i», R«reg», #true
+					BNEQZ R«i», label«label»
+		«ifstmt.if_statement.compile»
+					BR label«label + 1»
+		label«label»:	
+		«IF ifstmt.else_statement != null»
+			«ifstmt.else_statement.compile»
+		«ENDIF»
+		label«label+1»:	
+		«inc»
+		«inclabel»
+		«inclabel»
+	'''
+		
 	def compile(VariableDeclarator vd) '''
 		«IF vd.variable_initializer != null»
 			«vd.variable_initializer.compile(vd.variable_name)»
@@ -53,17 +127,188 @@ class JavadslGenerator implements IGenerator {
 	'''
 	
 	def compile(VariableInitializer vi, String id) '''
-		«vi.expr.compile(id)»
+		«var reg = i.intValue»
+		«vi.expr.compileParentExp»
+					ST «id», R«reg»
 	'''
 	
-	def compile(Expression e, String id) '''		
-		LD R«i», #«e.literal.eGet(JavadslPackage.Literals.FLOAT_TYPE__VALUE)»
-		ST id, R«i»
+	def compileParentExp(Expression e) '''
+		«e.numexp.compileNumExp»
+	'''	
+	
+	def compileNumExp(Expression e) '''
+		«var reg = i.intValue»
+		«IF e.right != null»
+			«e.right.compileBitExp»
+		«ENDIF»
+		«IF e.left != null»
+			«var numExp = NumericExpression.cast(e)»
+			«e.left.compileNumExp»
+						«IF numExp.tokens.get(0) == '+'»
+						ADD R«reg», R«reg + 1», R«reg»
+						«ENDIF»
+						«IF numExp.tokens.get(0) == '-'»
+						SUB R«reg», R«reg + 1», R«reg»
+						«ENDIF»
+						«IF numExp.tokens.get(0) == '*'»
+						MUL R«reg», R«reg + 1», R«reg»
+						«ENDIF»
+						«IF numExp.tokens.get(0) == '/'»
+						DIV R«reg», R«reg + 1», R«reg»
+						«ENDIF»
+		«ENDIF»
+		«IF e.exp != null»
+			«e.exp.compileBitExp»
+		«ENDIF»
+	'''
+	
+	def compileBitExp(Expression e) '''
+		«e.exp.compileLogicalExp»
+	'''
+
+	def compileLogicalExp(Expression e) '''
+		«e.exp.compileTestingExp»
+	'''
+
+	def compileTestingExp(Expression e) '''
+		«var reg = i.intValue»
+		«IF e.right != null»
+			«e.right.compileArgsExp»
+		«ENDIF»
+		«IF e.left != null»
+			«var numExp = TestingExpression.cast(e)»
+			«e.left.compileTestingExp»
+					«IF numExp.tokens.get(0) == '<'»
+							SUB R«i», R«reg + 1», R«reg»
+							BLTZ R«i», label«label»
+							LD, R«reg», #false
+							BR label«label + 1»
+				label«label»:	LD, R«reg», #true
+				label«label + 1»:	
+				«inc»
+				«inclabel»
+				«inclabel»
+					«ENDIF»
+					«IF numExp.tokens.get(0) == '>'»
+						SUB R«i», R«reg + 1», R«reg»
+						BGTZ R«i», label«label»
+						LD, R«reg», #false
+						BR label«label + 1»
+			label«label»:	LD, R«reg», #true
+			label«label + 1»:	
+			«inc»
+			«inclabel»
+			«inclabel»
+					«ENDIF»
+					«IF numExp.tokens.get(0) == '<='»
+							SUB R«i», R«reg + 1», R«reg»
+							BLETZ R«i», label«label»
+							LD, R«reg», #false
+							BR label«label + 1»
+				label«label»:	LD, R«reg», #true
+				label«label + 1»:	
+				«inc»
+				«inclabel»
+				«inclabel»
+					«ENDIF»
+					«IF numExp.tokens.get(0) == '>='»
+						SUB R«i», R«reg + 1», R«reg»
+						BGETZ R«i», label«label»
+						LD, R«reg», #false
+						BR label«label + 1»
+			label«label»:	LD, R«reg», #true
+			label«label + 1»:	
+						«inc»
+						«inclabel»
+						«inclabel»
+					«ENDIF»
+					«IF numExp.tokens.get(0) == '=='»
+							SUB R«i», R«reg + 1», R«reg»
+							BEQZ R«i», label«label»
+							LD, R«reg», #false
+							BR label«label + 1»
+				label«label»:	LD, R«reg», #true
+				label«label + 1»:	
+							«inc»
+				«inclabel»
+				«inclabel»
+					«ENDIF»
+					«IF numExp.tokens.get(0) == '!='»
+						SUB R«i», R«reg + 1», R«reg»
+						BNEQZ R«i», label«label»
+						LD, R«reg», #false
+						BR label«label + 1»
+			label«label»:	LD, R«reg», #true
+			label«label + 1»:	
+			«inc»
+			«inclabel»
+			«inclabel»
+					«ENDIF»			
+		«ENDIF»
+		«IF e.exp != null»
+			«e.exp.compileArgsExp»
+		«ENDIF»
+	'''
+	
+	def compileArgsExp(Expression e) '''
+		«e.exp.compileCastingExp»
+	'''
+	
+	def compileCastingExp(Expression e) '''
+		«e.exp.compileCreatingExp»
+	'''
+
+	def compileCreatingExp(Expression e) '''
+		«e.exp.compileParenthesisExp»
+	'''
+	
+	def compileParenthesisExp(Expression e) '''
+		«IF !e.parenthesis.empty»
+			«e.exp.compileFunctionCall»
+		«ELSEIF e.exp != null»
+			«e.exp.compilePrimaryExp»
+		«ENDIF»
+	'''
+	
+	def getCaller(EObject obj) {
+		if (obj instanceof MethodDeclaration) {
+			return MethodDeclaration.cast(obj).method_id
+		} else if (obj instanceof ClassDeclaration) {
+			return ClassDeclaration.cast(obj).class_name
+		} else {
+			return obj.eContainer.caller
+		}
+	}
+	
+	def compileFunctionCall(Expression e) '''
+		«var caller = e.caller»
+					ADD SP, SP, #«caller».recordSize
+					ST *SP, #here + 16
+					BR label«e.literal.eGet(JavadslPackage.Literals.OBJECT_TYPE__VALUE)»
+					SUB SP, SP, #«caller».recordSize
+		«indent»
+	'''
+	
+	def compilePrimaryExp(Expression e) '''
+					«IF e.literal instanceof BooleanTypeImpl»
+						LD R«i», #«e.literal.eGet(JavadslPackage.Literals.BOOLEAN_TYPE__VALUE)»
+					«ELSEIF e.literal instanceof IntTypeImpl»
+						LD R«i», #«e.literal.eGet(JavadslPackage.Literals.INT_TYPE__VALUE)»
+					«ELSEIF e.literal instanceof ObjectTypeImpl»
+						LD R«i», #«e.literal.eGet(JavadslPackage.Literals.OBJECT_TYPE__VALUE)»
+					«ENDIF»
 		«inc»
 	'''
 	
 	Integer i = 0;
 	def void inc(){
 		i++;
+	}
+	
+	def void indent(){}
+	
+	Integer label = 0;
+	def void inclabel(){
+		label++;
 	}
 }
