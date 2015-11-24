@@ -1,2 +1,5 @@
 *.class
-org.xtext.com.Javadsl/src-gen/*
+**/src-gen/*
+**/bin/*
+**/xtend-gen/*
+org.xtext.com.Javadsl/model/*
