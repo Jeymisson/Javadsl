@@ -3,14 +3,21 @@
  */
 package org.xtext.com.generator
 
+import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.IFileSystemAccess
 import org.eclipse.xtext.generator.IGenerator
 import org.xtext.com.javadsl.ClassDeclaration
 import org.xtext.com.javadsl.Expression
 import org.xtext.com.javadsl.FieldDeclaration
+import org.xtext.com.javadsl.IfStatement
 import org.xtext.com.javadsl.JavadslPackage
+import org.xtext.com.javadsl.MethodDeclaration
 import org.xtext.com.javadsl.NumericExpression
+import org.xtext.com.javadsl.ReturnStatement
+import org.xtext.com.javadsl.Statement
+import org.xtext.com.javadsl.StatementBlock
+import org.xtext.com.javadsl.StaticInitializer
 import org.xtext.com.javadsl.TestingExpression
 import org.xtext.com.javadsl.VariableDeclaration
 import org.xtext.com.javadsl.VariableDeclarator
@@ -18,13 +25,6 @@ import org.xtext.com.javadsl.VariableInitializer
 import org.xtext.com.javadsl.impl.BooleanTypeImpl
 import org.xtext.com.javadsl.impl.IntTypeImpl
 import org.xtext.com.javadsl.impl.ObjectTypeImpl
-import org.xtext.com.javadsl.MethodDeclaration
-import org.xtext.com.javadsl.StaticInitializer
-import org.xtext.com.javadsl.StatementBlock
-import org.xtext.com.javadsl.Statement
-import org.xtext.com.javadsl.IfStatement
-import org.xtext.com.javadsl.ReturnStatement
-import org.eclipse.emf.ecore.EObject
 
 /**
  * Generates code from your model files on save.
@@ -44,7 +44,6 @@ class JavadslGenerator implements IGenerator {
 		«FOR f:c.field_declarations»
 	      	«f.compile»
 	    «ENDFOR»
-	    
 					HALT
 	'''
 	
@@ -69,7 +68,6 @@ class JavadslGenerator implements IGenerator {
 
 	def compile(MethodDeclaration d) '''
 		«IF d.body != null»
-		
 		//«d.method_id»'s code
 		label«d.method_id»:
 		«d.body.compile»
@@ -133,41 +131,40 @@ class JavadslGenerator implements IGenerator {
 	'''
 	
 	def compileParentExp(Expression e) '''
-		«e.numexp.compileNumExp»
+		«e.compileNumExp»
 	'''	
 	
 	def compileNumExp(Expression e) '''
-		«var reg = i.intValue»
-		«IF e.right != null»
-			«e.right.compileBitExp»
-		«ENDIF»
-		«IF e.left != null»
-			«var numExp = NumericExpression.cast(e)»
-			«e.left.compileNumExp»
-						«IF numExp.tokens.get(0) == '+'»
-						ADD R«reg», R«reg + 1», R«reg»
-						«ENDIF»
-						«IF numExp.tokens.get(0) == '-'»
-						SUB R«reg», R«reg + 1», R«reg»
-						«ENDIF»
-						«IF numExp.tokens.get(0) == '*'»
-						MUL R«reg», R«reg + 1», R«reg»
-						«ENDIF»
-						«IF numExp.tokens.get(0) == '/'»
-						DIV R«reg», R«reg + 1», R«reg»
-						«ENDIF»
-		«ENDIF»
-		«IF e.exp != null»
-			«e.exp.compileBitExp»
-		«ENDIF»
+	«var reg = i.intValue»
+	«IF e.right != null»
+	«e.right.compileBitExp»
+	«ENDIF»
+	«IF e.left != null && e instanceof NumericExpression»
+	«var numExp = NumericExpression.cast(e)»
+	«e.left.compileNumExp»
+				«IF numExp.tokens.get(0) == '+'»
+				ADD R«reg», R«reg + 1», R«reg»
+				«ENDIF»
+				«IF numExp.tokens.get(0) == '-'»
+				SUB R«reg», R«reg + 1», R«reg»
+				«ENDIF»
+				«IF numExp.tokens.get(0) == '*'»
+				MUL R«reg», R«reg + 1», R«reg»
+				«ENDIF»
+				«IF numExp.tokens.get(0) == '/'»
+				DIV R«reg», R«reg + 1», R«reg»
+				«ENDIF»
+	«ELSEIF e != null»
+		«e.compileBitExp»
+	«ENDIF»
 	'''
 	
 	def compileBitExp(Expression e) '''
-		«e.exp.compileLogicalExp»
+		«e.compileLogicalExp»
 	'''
 
 	def compileLogicalExp(Expression e) '''
-		«e.exp.compileTestingExp»
+		«e.compileTestingExp»
 	'''
 
 	def compileTestingExp(Expression e) '''
@@ -175,21 +172,21 @@ class JavadslGenerator implements IGenerator {
 		«IF e.right != null»
 			«e.right.compileArgsExp»
 		«ENDIF»
-		«IF e.left != null»
+		«IF e.left != null && e instanceof TestingExpression»
 			«var numExp = TestingExpression.cast(e)»
 			«e.left.compileTestingExp»
 					«IF numExp.tokens.get(0) == '<'»
-							SUB R«i», R«reg + 1», R«reg»
-							BLTZ R«i», label«label»
-							LD, R«reg», #false
-							BR label«label + 1»
+					SUB R«i», R«reg + 1», R«reg»
+					BLTZ R«i», label«label»
+					LD, R«reg», #false
+					BR label«label + 1»
 				label«label»:	LD, R«reg», #true
 				label«label + 1»:	
 				«inc»
 				«inclabel»
 				«inclabel»
 					«ENDIF»
-					«IF numExp.tokens.get(0) == '>'»
+						«IF numExp.tokens.get(0) == '>'»
 						SUB R«i», R«reg + 1», R«reg»
 						BGTZ R«i», label«label»
 						LD, R«reg», #false
@@ -201,10 +198,10 @@ class JavadslGenerator implements IGenerator {
 			«inclabel»
 					«ENDIF»
 					«IF numExp.tokens.get(0) == '<='»
-							SUB R«i», R«reg + 1», R«reg»
-							BLETZ R«i», label«label»
-							LD, R«reg», #false
-							BR label«label + 1»
+					SUB R«i», R«reg + 1», R«reg»
+					BLETZ R«i», label«label»
+					LD, R«reg», #false
+					BR label«label + 1»
 				label«label»:	LD, R«reg», #true
 				label«label + 1»:	
 				«inc»
@@ -212,21 +209,21 @@ class JavadslGenerator implements IGenerator {
 				«inclabel»
 					«ENDIF»
 					«IF numExp.tokens.get(0) == '>='»
-						SUB R«i», R«reg + 1», R«reg»
-						BGETZ R«i», label«label»
-						LD, R«reg», #false
-						BR label«label + 1»
-			label«label»:	LD, R«reg», #true
+					SUB R«i», R«reg + 1», R«reg»
+					BGETZ R«i», label«label»
+					LD, R«reg», #false
+					BR label«label + 1»
+	label«label»:	LD, R«reg», #true
 			label«label + 1»:	
 						«inc»
 						«inclabel»
 						«inclabel»
 					«ENDIF»
 					«IF numExp.tokens.get(0) == '=='»
-							SUB R«i», R«reg + 1», R«reg»
-							BEQZ R«i», label«label»
-							LD, R«reg», #false
-							BR label«label + 1»
+					SUB R«i», R«reg + 1», R«reg»
+					BEQZ R«i», label«label»
+					LD, R«reg», #false
+					BR label«label + 1»
 				label«label»:	LD, R«reg», #true
 				label«label + 1»:	
 							«inc»
@@ -234,39 +231,38 @@ class JavadslGenerator implements IGenerator {
 				«inclabel»
 					«ENDIF»
 					«IF numExp.tokens.get(0) == '!='»
-						SUB R«i», R«reg + 1», R«reg»
-						BNEQZ R«i», label«label»
-						LD, R«reg», #false
-						BR label«label + 1»
+					SUB R«i», R«reg + 1», R«reg»
+					BNEQZ R«i», label«label»
+					LD, R«reg», #false
+					BR label«label + 1»
 			label«label»:	LD, R«reg», #true
 			label«label + 1»:	
 			«inc»
 			«inclabel»
 			«inclabel»
 					«ENDIF»			
-		«ENDIF»
-		«IF e.exp != null»
-			«e.exp.compileArgsExp»
+		«ELSEIF e != null»
+				«e.compileArgsExp»
 		«ENDIF»
 	'''
 	
 	def compileArgsExp(Expression e) '''
-		«e.exp.compileCastingExp»
+		«e.compileCastingExp»
 	'''
 	
 	def compileCastingExp(Expression e) '''
-		«e.exp.compileCreatingExp»
+		«e.compileCreatingExp»
 	'''
 
 	def compileCreatingExp(Expression e) '''
-		«e.exp.compileParenthesisExp»
+		«e.compileParenthesisExp»
 	'''
 	
 	def compileParenthesisExp(Expression e) '''
 		«IF !e.parenthesis.empty»
-			«e.exp.compileFunctionCall»
-		«ELSEIF e.exp != null»
-			«e.exp.compilePrimaryExp»
+			«e.compileFunctionCall»
+		«ELSEIF e != null»
+			«e.compilePrimaryExp»
 		«ENDIF»
 	'''
 	

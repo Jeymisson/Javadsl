@@ -85,21 +85,21 @@ Type:
 ;
 
 Expression returns Expression: 
-	numexp=NumericExpression 
+	NumericExpression 
 ;
 
 NumericExpression returns Expression:
-	single_op=('-' | '++' | '--') exp=BitExpression
-	| exp=BitExpression (single_ops+=('++' | '--') | ({NumericExpression.left=current} tokens+=('+' | '+=' | '-' | '-=' | '*' | '*=' | '/' | '/=' | '%' | '%=') right=BitExpression)*)
+	('-' | '++' | '--') BitExpression
+	| BitExpression (single_ops+=('++' | '--') | ({NumericExpression.left=current} tokens+=('+' | '+=' | '-' | '-=' | '*' | '*=' | '/' | '/=' | '%' | '%=') right=BitExpression)*)
 ;
 
 BitExpression returns Expression:
-	'~' exp=LogicalExpression
-    | exp=LogicalExpression ({BitExpression.left=current} tokens+=('>>=' | '<<' | '>>' | '>>>') right=LogicalExpression)* 
+	'~' LogicalExpression
+    | LogicalExpression ({BitExpression.left=current} tokens+=('>>=' | '<<' | '>>' | '>>>') right=LogicalExpression)* 
 ;
 
 TestingExpression returns Expression: 
-      exp=ArgsExpression
+      ArgsExpression
       ({TestingExpression.left=current} tokens+=('>' | '<' | '>=' | '<=' | '==' | '!=') right=ArgsExpression )*
       | {TestingExpression} "true"
       | {TestingExpression} "false"
@@ -107,7 +107,7 @@ TestingExpression returns Expression:
 
 LogicalExpression returns Expression: 
     '!' right=TestingExpression
-      | exp=TestingExpression ({LogicalExpression.left=current} tokens=(LOGIC_TOKENS) right=TestingExpression |
+      | TestingExpression ({LogicalExpression.left=current} tokens=(LOGIC_TOKENS) right=TestingExpression |
       	{LogicalExpression.left=current}'?' right=TestingExpression {LogicalExpression.ternary=current}':' ternary_end=TestingExpression
       | {LogicalExpression.left=current}'instanceof' ObjectName
       )*
@@ -118,22 +118,22 @@ terminal LOGIC_TOKENS:
 ;
 
 ArgsExpression returns Expression:
-	exp=CastingExpression ('(' arg_list+=Arglist? ')'| {ArgsExpression.left=current}'.' right=CastingExpression | {ArgsExpression.left=current}'[' right=CastingExpression ']' | {ArgsExpression.left=current}',' right=CastingExpression)*
+	CastingExpression ('(' arg_list+=Arglist? ')'| {ArgsExpression.left=current}'.' right=CastingExpression | {ArgsExpression.left=current}'[' right=CastingExpression ']' | {ArgsExpression.left=current}',' right=CastingExpression)*
 ;
 
 Arglist: arg=CastingExpression (',' args+=CastingExpression)* ;
       
 CastingExpression returns Expression: 
-      exp=CreatingExpression ({CastingExpression.left=current}'(' types+=Type ')' right=CreatingExpression)*;
+      CreatingExpression ({CastingExpression.left=current}'(' types+=Type ')' right=CreatingExpression)*;
       
 CreatingExpression returns Expression: 
-	exp=ParenthesisExpression
+	ParenthesisExpression
       ("new" (
       	(ObjectName '(' (arg_list+=Arglist)? ')') | (type_specifiers+=TypeSpecifier ('[' parenthesis+=ParenthesisExpression ']')? ('[' ']')*)
       ))* ;
 
 ParenthesisExpression returns Expression:
-	exp=PrimaryExpression ('(' parenthesis+=PrimaryExpression ')')*
+	PrimaryExpression ('(' parenthesis+=PrimaryExpression ')')*
 ;
 
 PrimaryExpression returns Expression: 
